@@ -4,6 +4,9 @@
 
 replicaCount: 3
 
+movie_service:
+  name: movie-service
+
 image:
   repository: sajjadhz/fastapiapp
   pullPolicy: IfNotPresent

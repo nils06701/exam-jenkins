@@ -1,9 +1,13 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ include "fastapiapp.fullname" . }}-test-connection"
+  name: "movie-service-test-connection"
   labels:
-    {{- include "fastapiapp.labels" . | nindent 4 }}
+    helm.sh/chart: fastapiapp-0.1.0
+    app.kubernetes.io/name: fastapiapp
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "latest"
+    app.kubernetes.io/managed-by: Helm
   annotations:
     "helm.sh/hook": test
 spec:
@@ -11,5 +15,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "fastapiapp.fullname" . }}:{{ .Values.service.port }}/api/v1/checkapi']
+      args: ['movie-service:80/api/v1/checkapi']
   restartPolicy: Never

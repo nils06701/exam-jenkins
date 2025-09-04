@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: movie-db-statefulset
+  labels:
+    app: movie-db
+spec:
+  serviceName: movie-db-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movie-db
+  template:
+    metadata:
+      labels:
+        app: movie-db
+    spec:
+      containers:
+        - name: movie-db-container
+          image: "postgres:12.1-alpine"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: POSTGRES_USER_MOVIE
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: POSTGRES_PASSWORD_MOVIE
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: POSTGRES_DB_MOVIE
+          volumeMounts:
+            - name: postgres-data-movie
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data-movie
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cast-db-statefulset
+  labels:
+    app: cast-db
+spec:
+  serviceName: cast-db-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cast-db
+  template:
+    metadata:
+      labels:
+        app: cast-db
+    spec:
+      containers:
+        - name: cast-db-container
+          image: "postgres:12.1-alpine"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: POSTGRES_USER_CAST
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: POSTGRES_PASSWORD_CAST
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: POSTGRES_DB_CAST
+          volumeMounts:
+            - name: postgres-data-cast
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data-cast
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

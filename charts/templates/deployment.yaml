@@ -1,61 +1,99 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "fastapiapp.fullname" . }}
+  name: movie-deployment
   labels:
-    {{- include "fastapiapp.labels" . | nindent 4 }}
+    app: movie-deployment
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: 1
   selector:
     matchLabels:
-      {{- include "fastapiapp.selectorLabels" . | nindent 6 }}
+      app: movie-deployment
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        {{- include "fastapiapp.selectorLabels" . | nindent 8 }}
+        app: movie-deployment
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "fastapiapp.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - name: movie-container
+          image: "nils06/movie-service:latest"
+          imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8000
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /api/v1/checkapi
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /api/v1/checkapi
-              port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+          env:
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: DATABASE_URI_MOVIE
+            - name: CAST_SERVICE_HOST_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-configmap
+                  key: CAST_SERVICE_HOST_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cast-deployment
+  labels:
+    app: cast-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cast-deployment
+  template:
+    metadata:
+      labels:
+        app: cast-deployment
+    spec:
+      containers:
+        - name: cast-container
+          image: "nils06/cast-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: movie-secrets-string
+                  key: DATABASE_URI_CAST
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-deployment
+  template:
+    metadata:
+      labels:
+        app: nginx-deployment
+    spec:
+      containers:
+        - name: nginx-container
+          image: "nginx:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          volumeMounts:
+            - mountPath: /etc/nginx
+              readOnly: true
+              name: nginx-config
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: nginx-conf
+            items:
+              - key: nginx.conf
+                path: nginx.conf

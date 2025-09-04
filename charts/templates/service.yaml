@@ -1,16 +1,63 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fastapiapp.fullname" . }}
+  name: movie-service
   labels:
-    {{- include "fastapiapp.labels" . | nindent 4 }}
+    app: movie-service
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
-      nodePort: {{ .Values.service.nodePort }}
+    - port: 8000
+      targetPort: 8000
       protocol: TCP
       name: http
   selector:
-    {{- include "fastapiapp.selectorLabels" . | nindent 4 }}
+    app: movie-deployment
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cast-service
+  labels:
+    app: cast-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: cast-deployment
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: movie-db-service
+  labels:
+    app: movie-db
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app: movie-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cast-db-service
+  labels:
+    app: cast-db
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app: cast-db
