@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: movie-configmap
+  name: service-configmap
   labels:
-    app: movie-configmap
+    app: service-configmap
 data:
   # Database configuration
   POSTGRES_DB_MOVIE: "movie_db_dev"

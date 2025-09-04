@@ -11,6 +11,8 @@ spec:
       app: movie-deployment
   template:
     metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
       labels:
         app: movie-deployment
     spec:
@@ -30,7 +32,7 @@ spec:
             - name: CAST_SERVICE_HOST_URL
               valueFrom:
                 configMapKeyRef:
-                  name: movie-configmap
+                  name: service-configmap
                   key: CAST_SERVICE_HOST_URL
 ---
 apiVersion: apps/v1
@@ -46,6 +48,8 @@ spec:
       app: cast-deployment
   template:
     metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
       labels:
         app: cast-deployment
     spec:
@@ -76,6 +80,8 @@ spec:
       app: nginx-deployment
   template:
     metadata:
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
       labels:
         app: nginx-deployment
     spec:
@@ -88,12 +94,9 @@ spec:
               containerPort: 8080
           volumeMounts:
             - mountPath: /etc/nginx
-              readOnly: true
-              name: nginx-config
+              name: nginx-conf
+              subPath: nginx.conf
       volumes:
         - name: nginx-conf
           configMap:
             name: nginx-conf
-            items:
-              - key: nginx.conf
-                path: nginx.conf

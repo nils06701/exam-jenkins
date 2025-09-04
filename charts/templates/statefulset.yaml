@@ -25,8 +25,8 @@ spec:
           env:
             - name: POSTGRES_USER
               valueFrom:
-                secretKeyRef:
-                  name: movie-secrets-string
+                configMapKeyRef:
+                  name: service-configmap
                   key: POSTGRES_USER_MOVIE
             - name: POSTGRES_PASSWORD
               valueFrom:
@@ -35,8 +35,8 @@ spec:
                   key: POSTGRES_PASSWORD_MOVIE
             - name: POSTGRES_DB
               valueFrom:
-                secretKeyRef:
-                  name: movie-secrets-string
+                configMapKeyRef:
+                  name: service-configmap
                   key: POSTGRES_DB_MOVIE
           volumeMounts:
             - name: postgres-data-movie
@@ -77,8 +77,8 @@ spec:
           env:
             - name: POSTGRES_USER
               valueFrom:
-                secretKeyRef:
-                  name: movie-secrets-string
+                configMapKeyRef:
+                  name: service-configmap
                   key: POSTGRES_USER_CAST
             - name: POSTGRES_PASSWORD
               valueFrom:
@@ -87,8 +87,8 @@ spec:
                   key: POSTGRES_PASSWORD_CAST
             - name: POSTGRES_DB
               valueFrom:
-                secretKeyRef:
-                  name: movie-secrets-string
+                configMapKeyRef:
+                  name: service-configmap
                   key: POSTGRES_DB_CAST
           volumeMounts:
             - name: postgres-data-cast
