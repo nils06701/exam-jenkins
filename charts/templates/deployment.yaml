@@ -1,97 +1,97 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: movie-deployment
+  name: {{ .Values.movieService.deployment.name }}
   labels:
-    app: movie-deployment
+    app: {{ .Values.movieService.deployment.labels.app }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.movieService.deployment.replicas }}
   selector:
     matchLabels:
-      app: movie-deployment
+      app: {{ .Values.movieService.deployment.labels.app }}
   template:
     metadata:
       annotations:
         rollme: {{ randAlphaNum 5 | quote }}
       labels:
-        app: movie-deployment
+        app: {{ .Values.movieService.deployment.labels.app }}
     spec:
       containers:
-        - name: movie-container
-          image: "nils06/movie-service:latest"
-          imagePullPolicy: Always
+        - name: {{ .Values.movieService.deployment.container.name }}
+          image: "{{ .Values.movieService.deployment.image.repository }}:{{ .Values.movieService.deployment.image.tag }}"
+          imagePullPolicy: {{ .Values.movieService.deployment.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8000
+              containerPort: {{ .Values.movieService.deployment.container.port }}
           env:
             - name: DATABASE_URI
               valueFrom:
                 secretKeyRef:
-                  name: movie-secrets-string
-                  key: DATABASE_URI_MOVIE
+                  name: {{ .Values.movieService.deployment.container.env.databaseUriSecret.name }}
+                  key: {{ .Values.movieService.deployment.container.env.databaseUriSecret.key }}
             - name: CAST_SERVICE_HOST_URL
               valueFrom:
                 configMapKeyRef:
-                  name: service-configmap
-                  key: CAST_SERVICE_HOST_URL
+                  name: {{ .Values.movieService.deployment.container.env.castServiceUrlConfigMap.name }}
+                  key: {{ .Values.movieService.deployment.container.env.castServiceUrlConfigMap.key }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cast-deployment
+  name: {{ .Values.castService.deployment.name }}
   labels:
-    app: cast-deployment
+    app: {{ .Values.castService.deployment.labels.app }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.castService.deployment.replicas }}
   selector:
     matchLabels:
-      app: cast-deployment
+      app: {{ .Values.castService.deployment.labels.app }}
   template:
     metadata:
       annotations:
         rollme: {{ randAlphaNum 5 | quote }}
       labels:
-        app: cast-deployment
+        app: {{ .Values.castService.deployment.labels.app }}
     spec:
       containers:
-        - name: cast-container
-          image: "nils06/cast-service:latest"
-          imagePullPolicy: Always
+        - name: {{ .Values.castService.deployment.container.name }}
+          image: "{{ .Values.castService.deployment.image.repository }}:{{ .Values.castService.deployment.image.tag }}"
+          imagePullPolicy: {{ .Values.castService.deployment.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8000
+              containerPort: {{ .Values.castService.deployment.container.port }}
           env:
             - name: DATABASE_URI
               valueFrom:
                 secretKeyRef:
-                  name: movie-secrets-string
-                  key: DATABASE_URI_CAST
+                  name: {{ .Values.castService.deployment.container.env.databaseUriSecret.name }}
+                  key: {{ .Values.castService.deployment.container.env.databaseUriSecret.key }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: {{ .Values.nginx.deployment.name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.nginx.deployment.replicas }}
   selector:
     matchLabels:
-      app: nginx-deployment
+      app: {{ .Values.nginx.deployment.labels.app }}
   template:
     metadata:
       labels:
-        app: nginx-deployment
+        app: {{ .Values.nginx.deployment.labels.app }}
     spec:
       containers:
-        - name: nginx-deployment
-          image: nginx:latest
+        - name: {{ .Values.nginx.deployment.container.name }}
+          image: {{ .Values.nginx.deployment.image.repository }}:{{ .Values.nginx.deployment.image.tag }}
           ports:
-            - containerPort: 80
+            - containerPort: {{ .Values.nginx.deployment.container.port }}
           volumeMounts:
-            - name: nginx-config
-              mountPath: /etc/nginx/nginx.conf
-              subPath: nginx.conf
+            - name: {{ .Values.nginx.deployment.container.volumeMount.name }}
+              mountPath: {{ .Values.nginx.deployment.container.volumeMount.mountPath }}
+              subPath: {{ .Values.nginx.deployment.container.volumeMount.subPath }}
       volumes:
-        - name: nginx-config
+        - name: {{ .Values.nginx.deployment.container.volume.name }}
           configMap:
-            name: nginx-config
+            name: {{ .Values.nginx.deployment.container.volume.configMapName }}
 

@@ -1,79 +1,79 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: movie-service
+  name: {{ .Values.movieService.service.name }}
   labels:
-    app: movie-service
+    app: {{ .Values.movieService.service.labels.app }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.movieService.service.type }}
   ports:
-    - port: 8000
-      targetPort: 8000
-      protocol: TCP
+    - port: {{ .Values.movieService.service.port }}
+      targetPort: {{ .Values.movieService.service.targetPort }}
+      protocol: {{ .Values.movieService.service.protocol }}
       name: http
   selector:
-    app: movie-deployment
+    app: {{ .Values.movieService.deployment.labels.app }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cast-service
+  name: {{ .Values.castService.service.name }}
   labels:
-    app: cast-service
+    app: {{ .Values.castService.service.labels.app }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.castService.service.type }}
   ports:
-    - port: 8000
-      targetPort: 8000
-      protocol: TCP
+    - port: {{ .Values.castService.service.port }}
+      targetPort: {{ .Values.castService.service.targetPort }}
+      protocol: {{ .Values.castService.service.protocol }}
       name: http
   selector:
-    app: cast-deployment
+    app: {{ .Values.castService.deployment.labels.app }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: movie-db-service
+  name: {{ .Values.movieDb.service.name }}
   labels:
-    app: movie-db
+    app: {{ .Values.movieDb.service.labels.app }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.movieDb.service.type }}
   ports:
-    - port: 5432
-      targetPort: 5432
-      protocol: TCP
+    - port: {{ .Values.movieDb.service.port }}
+      targetPort: {{ .Values.movieDb.service.targetPort }}
+      protocol: {{ .Values.movieDb.service.protocol }}
       name: postgres
   selector:
-    app: movie-db
+    app: {{ .Values.movieDb.statefulset.labels.app }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: cast-db-service
+  name: {{ .Values.castDb.service.name }}
   labels:
-    app: cast-db
+    app: {{ .Values.castDb.service.labels.app }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.castDb.service.type }}
   ports:
-    - port: 5432
-      targetPort: 5432
-      protocol: TCP
+    - port: {{ .Values.castDb.service.port }}
+      targetPort: {{ .Values.castDb.service.targetPort }}
+      protocol: {{ .Values.castDb.service.protocol }}
       name: postgres
   selector:
-    app: cast-db
+    app: {{ .Values.castDb.statefulset.labels.app }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-service
+  name: {{ .Values.nginx.service.name }}
   labels:
-    app: nginx-deployment
+    app: {{ .Values.nginx.service.labels.app }}
 spec:
-  type: NodePort
+  type: {{ .Values.nginx.service.type }}
   selector:
-    app: nginx-deployment
+    app: {{ .Values.nginx.deployment.labels.app }}
   ports:
     - name: http
-      port: 80      
-      targetPort: 80
-      nodePort: 30050 
+      port: {{ .Values.nginx.service.port }}      
+      targetPort: {{ .Values.nginx.service.targetPort }}
+      nodePort: {{ .Values.nginx.service.nodePort }} 

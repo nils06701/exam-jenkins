@@ -1,101 +1,102 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: movie-db-statefulset
+  name: {{ .Values.movieDb.statefulset.name }}
   labels:
-    app: movie-db
+    app: {{ .Values.movieDb.statefulset.labels.app }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.movieDb.statefulset.replicas }}
   selector:
     matchLabels:
-      app: movie-db
+      app: {{ .Values.movieDb.statefulset.labels.app }}
   template:
     metadata:
       labels:
-        app: movie-db
+        app: {{ .Values.movieDb.statefulset.labels.app }}
     spec:
       containers:
-        - name: movie-db-container
-          image: "postgres:12.1-alpine"
-          imagePullPolicy: IfNotPresent
+        - name: {{ .Values.movieDb.statefulset.container.name }}
+          image: "{{ .Values.movieDb.statefulset.image.repository }}:{{ .Values.movieDb.statefulset.image.tag }}"
+          imagePullPolicy: {{ .Values.movieDb.statefulset.image.pullPolicy }}
           ports:
             - name: postgres
-              containerPort: 5432
+              containerPort: {{ .Values.movieDb.statefulset.container.port }}
           env:
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: service-configmap
-                  key: POSTGRES_USER_MOVIE
+                  name: {{ .Values.movieDb.statefulset.container.env.postgresUser.configMapName }}
+                  key: {{ .Values.movieDb.statefulset.container.env.postgresUser.key }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: movie-secrets-string
-                  key: POSTGRES_PASSWORD_MOVIE
+                  name: {{ .Values.movieDb.statefulset.container.env.postgresPassword.secretName }}
+                  key: {{ .Values.movieDb.statefulset.container.env.postgresPassword.key }}
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: service-configmap
-                  key: POSTGRES_DB_MOVIE
+                  name: {{ .Values.movieDb.statefulset.container.env.postgresDb.configMapName }}
+                  key: {{ .Values.movieDb.statefulset.container.env.postgresDb.key }}
           volumeMounts:
-            - name: postgres-data-movie
-              mountPath: /var/lib/postgresql/data
+            - name: {{ .Values.movieDb.statefulset.container.volumeMount.name }}
+              mountPath: {{ .Values.movieDb.statefulset.container.volumeMount.mountPath }}
+
   volumeClaimTemplates:
     - metadata:
-        name: postgres-data-movie
+        name: {{ .Values.movieDb.statefulset.container.volumeMount.name }}
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes: {{ .Values.movieDb.statefulset.storage.accessModes }}
         resources:
           requests:
-            storage: 1Gi
+            storage: {{ .Values.movieDb.statefulset.storage.size }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: cast-db-statefulset
+  name: {{ .Values.castDb.statefulset.name }}
   labels:
-    app: cast-db
+    app: {{ .Values.castDb.statefulset.labels.app }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.castDb.statefulset.replicas }}
   selector:
     matchLabels:
-      app: cast-db
+      app: {{ .Values.castDb.statefulset.labels.app }}
   template:
     metadata:
       labels:
-        app: cast-db
+        app: {{ .Values.castDb.statefulset.labels.app }}
     spec:
       containers:
-        - name: cast-db-container
-          image: "postgres:12.1-alpine"
-          imagePullPolicy: IfNotPresent
+        - name: {{ .Values.castDb.statefulset.container.name }}
+          image: "{{ .Values.castDb.statefulset.image.repository }}:{{ .Values.castDb.statefulset.image.tag }}"
+          imagePullPolicy: {{ .Values.castDb.statefulset.image.pullPolicy }}
           ports:
             - name: postgres
-              containerPort: 5432
+              containerPort: {{ .Values.castDb.statefulset.container.port }}
           env:
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: service-configmap
-                  key: POSTGRES_USER_CAST
+                  name: {{ .Values.castDb.statefulset.container.env.postgresUser.configMapName }}
+                  key: {{ .Values.castDb.statefulset.container.env.postgresUser.key }}
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: movie-secrets-string
-                  key: POSTGRES_PASSWORD_CAST
+                  name: {{ .Values.castDb.statefulset.container.env.postgresPassword.secretName }}
+                  key: {{ .Values.castDb.statefulset.container.env.postgresPassword.key }}
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
-                  name: service-configmap
-                  key: POSTGRES_DB_CAST
+                  name: {{ .Values.castDb.statefulset.container.env.postgresDb.configMapName }}
+                  key: {{ .Values.castDb.statefulset.container.env.postgresDb.key }}
           volumeMounts:
-            - name: postgres-data-cast
-              mountPath: /var/lib/postgresql/data
+            - name: {{ .Values.castDb.statefulset.container.volumeMount.name }}
+              mountPath: {{ .Values.castDb.statefulset.container.volumeMount.mountPath }}
   volumeClaimTemplates:
     - metadata:
-        name: postgres-data-cast
+        name: {{ .Values.castDb.statefulset.container.volumeMount.name }}
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes: {{ .Values.castDb.statefulset.storage.accessModes }}
         resources:
           requests:
-            storage: 1Gi
+            storage: {{ .Values.castDb.statefulset.storage.size }}

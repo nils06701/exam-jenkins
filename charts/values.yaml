@@ -1,88 +1,254 @@
-# Default values for fastapiapp.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Global configuration
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
 
-replicaCount: 3
-
-movie_service:
+# Movie Service Configuration
+movieService:
   name: movie-service
+  deployment:
+    name: movie-deployment
+    replicas: 1
+    labels:
+      app: movie-deployment
+    image:
+      repository: nils06/movie-service
+      tag: latest
+      pullPolicy: Always
+    container:
+      name: movie-container
+      port: 8000
+      env:
+        databaseUriSecret:
+          name: movie-secrets-string
+          key: DATABASE_URI_MOVIE
+        castServiceUrlConfigMap:
+          name: service-configmap
+          key: CAST_SERVICE_HOST_URL
+  service:
+    name: movie-service
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+    labels:
+      app: movie-service
 
-image:
-  repository: sajjadhz/fastapiapp
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+# Cast Service Configuration
+castService:
+  name: cast-service
+  deployment:
+    name: cast-deployment
+    replicas: 1
+    labels:
+      app: cast-deployment
+    image:
+      repository: nils06/cast-service
+      tag: latest
+      pullPolicy: Always
+    container:
+      name: cast-container
+      port: 8000
+      env:
+        databaseUriSecret:
+          name: movie-secrets-string
+          key: DATABASE_URI_CAST
+  service:
+    name: cast-service
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+    protocol: TCP
+    labels:
+      app: cast-service
 
-imagePullSecrets: 
-  - name: "regcred"
-nameOverride: ""
-fullnameOverride: ""
+# Movie Database Configuration
+movieDb:
+  name: movie-db
+  statefulset:
+    name: movie-db-statefulset
+    replicas: 1
+    labels:
+      app: movie-db
+    image:
+      repository: postgres
+      tag: 12.1-alpine
+      pullPolicy: IfNotPresent
+    container:
+      name: movie-db-container
+      port: 5432
+      env:
+        postgresUser:
+          configMapName: service-configmap
+          key: POSTGRES_USER_MOVIE
+        postgresPassword:
+          secretName: movie-secrets-string
+          key: POSTGRES_PASSWORD_MOVIE
+        postgresDb:
+          configMapName: service-configmap
+          key: POSTGRES_DB_MOVIE
+      volumeMount:
+        name: postgres-data-movie
+        mountPath: /var/lib/postgresql/data
+    storage:
+      size: 1Gi
+      accessModes:
+        - ReadWriteOnce
+  service:
+    name: movie-db-service
+    type: ClusterIP
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+    labels:
+      app: movie-db
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+# Cast Database Configuration
+castDb:
+  name: cast-db
+  statefulset:
+    name: cast-db-statefulset
+    replicas: 1
+    labels:
+      app: cast-db
+    image:
+      repository: postgres
+      tag: 12.1-alpine
+      pullPolicy: IfNotPresent
+    container:
+      name: cast-db-container
+      port: 5432
+      env:
+        postgresUser:
+          configMapName: service-configmap
+          key: POSTGRES_USER_CAST
+        postgresPassword:
+          secretName: movie-secrets-string
+          key: POSTGRES_PASSWORD_CAST
+        postgresDb:
+          configMapName: service-configmap
+          key: POSTGRES_DB_CAST
+      volumeMount:
+        name: postgres-data-cast
+        mountPath: /var/lib/postgresql/data
+    storage:
+      size: 1Gi
+      accessModes:
+        - ReadWriteOnce
+  service:
+    name: cast-db-service
+    type: ClusterIP
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+    labels:
+      app: cast-db
 
-podAnnotations: {}
+# Nginx Configuration
+nginx:
+  name: nginx-deployment
+  deployment:
+    name: nginx-deployment
+    replicas: 1
+    labels:
+      app: nginx-deployment
+    image:
+      repository: nginx
+      tag: latest
+      pullPolicy: IfNotPresent
+    container:
+      name: nginx-deployment
+      port: 80
+      volumeMount:
+        name: nginx-config
+        mountPath: /etc/nginx/nginx.conf
+        subPath: nginx.conf
+      volume:
+        name: nginx-config
+        configMapName: nginx-config
+  service:
+    name: nginx-service
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 30050
+    labels:
+      app: nginx-deployment
 
-podSecurityContext: {}
-  # fsGroup: 2000
+# ConfigMap Configuration
+configMap:
+  serviceConfigMap:
+    name: service-configmap
+    labels:
+      app: service-configmap
+    data:
+      # Database configuration
+      postgresDbMovie: movie_db_dev
+      postgresDbCast: cast_db_dev
+      postgresUserMovie: movie_db_username
+      postgresUserCast: cast_db_username
+      
+      # Service URLs and endpoints
+      castServiceHostUrl: http://cast-service:8000/api/v1/casts/
+      
+      # Application configuration
+      appHost: 0.0.0.0
+      appPort: "8000"
+  
+  nginxConfig:
+    name: nginx-config
+    data:
+      nginxConf: |
+        events {
+            worker_connections 1024;
+        }
+        
+        http {
+            include       /etc/nginx/mime.types;
+            default_type  application/octet-stream;
+            
+            upstream movie-service {
+                server movie-service:8000;
+            }
+            
+            upstream cast-service {
+                server cast-service:8000;
+            }
+            
+            server {
+                listen 80;
+                server_name localhost;
+                
+                location /api/v1/movies {
+                    proxy_pass http://movie-service/api/v1/movies;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                }
+                
+                location /api/v1/casts {
+                    proxy_pass http://cast-service/api/v1/casts;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
+                }
+            }
+        }
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-service:
-  type: NodePort
-  port: 80
-  nodePort: 30007  
-  targetPort: 8000
-
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+# Secrets Configuration
+secrets:
+  movieSecrets:
+    name: movie-secrets-string
+    labels:
+      app: movie-secrets
+    type: Opaque
+    stringData:
+      # Database passwords
+      postgresPasswordMovie: movie_db_password
+      postgresPasswordCast: cast_db_password
+      
+      # Database URIs
+      databaseUriMovie: postgresql://movie_db_username:movie_db_password@movie-db-service:5432/movie_db_dev
+      databaseUriCast: postgresql://cast_db_username:cast_db_password@cast-db-service:5432/cast_db_dev
