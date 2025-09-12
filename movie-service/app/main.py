@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import asyncio
 from app.api.movies import movies
 from app.api.db import metadata, database, engine
 
@@ -8,6 +9,7 @@ app = FastAPI(openapi_url="/api/v1/movies/openapi.json", docs_url="/api/v1/movie
 
 @app.on_event("startup")
 async def startup():
+    await asyncio.sleep(5)
     await database.connect()
 
 @app.on_event("shutdown")

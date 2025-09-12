@@ -29,14 +29,40 @@ metadata:
   name: nginx-config
 data:
   nginx.conf: |
-    server {
-      listen 8080;
-
-      location /api/v1/movies {
-        proxy_pass http://movie-service:8000/api/v1/movies;
-      }
-
-      location /api/v1/casts {
-        proxy_pass http://cast-service:8000/api/v1/casts;
-      }
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+        
+        upstream movie-service {
+            server movie-service:8000;
+        }
+        
+        upstream cast-service {
+            server cast-service:8000;
+        }
+        
+        server {
+            listen 80;
+            server_name localhost;
+            
+            location /api/v1/movies {
+                proxy_pass http://movie-service/api/v1/movies;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+            
+            location /api/v1/casts {
+                proxy_pass http://cast-service/api/v1/casts;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+        }
     }

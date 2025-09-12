@@ -85,10 +85,10 @@ spec:
         - name: nginx-deployment
           image: nginx:latest
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           volumeMounts:
             - name: nginx-config
-              mountPath: /etc/nginx/conf.d/test.conf
+              mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
       volumes:
         - name: nginx-config
