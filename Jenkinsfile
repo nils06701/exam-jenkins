@@ -59,14 +59,6 @@ pipeline {
         }
         
         stage('Run Tests') {
-            when {
-                anyOf {
-                    branch 'dev'
-                    branch 'staging'
-                    branch 'qa'
-                    branch 'prod'
-                }
-            }
             parallel {
                 stage('Test Movie Service') {
                     steps {
