@@ -1,6 +1,10 @@
 pipeline {
     agent any
     
+    triggers {
+        githubPush()
+    }
+    
     environment {
         DOCKER_REGISTRY = 'docker.io'
         DOCKER_REPO_PREFIX = 'nils06'
