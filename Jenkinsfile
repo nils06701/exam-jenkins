@@ -14,6 +14,11 @@ pipeline {
         DOCKER_HUB_USER = 'nils06'
         DOCKER_HUB_PASS = credentials('DOCKER_HUB_PASS')
         KUBECONFIG = credentials("KUBECONFIG")
+        
+        DEV_NODEPORT = '30051'
+        QA_NODEPORT = '30052'
+        STAGING_NODEPORT = '30053'
+        PROD_NODEPORT = '30054'
     }
     
     stages {
@@ -124,7 +129,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToEnvironment('dev', env.IMAGE_TAG, '30051')
+                    deployToEnvironment('dev', env.IMAGE_TAG, env.DEV_NODEPORT)
                 }
             }
         }
@@ -135,7 +140,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToEnvironment('qa', env.IMAGE_TAG, '30052')
+                    deployToEnvironment('qa', env.IMAGE_TAG, env.QA_NODEPORT)
                 }
             }
         }
@@ -146,7 +151,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToEnvironment('staging', env.IMAGE_TAG, '30053')
+                    deployToEnvironment('staging', env.IMAGE_TAG, env.STAGING_NODEPORT)
                 }
             }
         }
@@ -163,7 +168,7 @@ pipeline {
                           submitterParameter: 'APPROVER'
                     
                     echo "Production deployment approved by: ${APPROVER}"
-                    deployToEnvironment('prod', env.IMAGE_TAG, '30054')
+                    deployToEnvironment('prod', env.IMAGE_TAG, env.PROD_NODEPORT)
                 }
             }
         }
