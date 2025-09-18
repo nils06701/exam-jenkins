@@ -13,6 +13,7 @@ pipeline {
         HELM_CHART_PATH = './charts'
         DOCKER_HUB_USER = 'nils06'
         DOCKER_HUB_PASS = credentials('DOCKER_HUB_PASS')
+        KUBECONFIG = credentials("kubeconfig")
     }
     
     stages {
@@ -155,7 +156,12 @@ pipeline {
 
 def deployToEnvironment(environment, imageTag) {
     echo "Deploying to ${environment} environment with image tag: ${imageTag}"
-    
+    sh '''
+          rm -Rf .kube
+          mkdir .kube
+          ls
+          cat $KUBECONFIG > .kube/config
+    '''
     sh """
         kubectl create namespace ${environment} --dry-run=client -o yaml | kubectl apply -f -
     """
