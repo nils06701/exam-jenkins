@@ -7,7 +7,6 @@ pipeline {
         MOVIE_SERVICE_IMAGE = "${DOCKER_REPO_PREFIX}/movie-service"
         CAST_SERVICE_IMAGE = "${DOCKER_REPO_PREFIX}/cast-service"
         HELM_CHART_PATH = './charts'
-        KUBECONFIG = credentials('kubeconfig')
         DOCKER_HUB_USER = 'nils06'
         DOCKER_HUB_PASS = credentials('DOCKER_HUB_PASS')
     }
