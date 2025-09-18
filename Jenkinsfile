@@ -33,6 +33,14 @@ pipeline {
         }
         
         stage('Build Docker Images') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    branch 'staging'
+                    branch 'qa'
+                    branch 'prod'
+                }
+            }
             steps {
                 script {
                     echo "Building Docker images..."
