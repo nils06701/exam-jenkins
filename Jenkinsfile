@@ -160,7 +160,8 @@ pipeline {
                 script {
                     // Manual approval required for production deployment
                     input message: 'Deploy to Production?', 
-                          ok: 'Deploy'
+                          ok: 'Deploy',
+                          submitterParameter: 'APPROVER'
                     
                     deployToEnvironment('prod', env.IMAGE_TAG, env.PROD_NODEPORT)
                 }
