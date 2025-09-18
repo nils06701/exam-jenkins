@@ -31,8 +31,7 @@ pipeline {
                     echo "Building on branch: ${env.BRANCH_NAME}"
                     
                     // Set image tag based on branch and build number
-                    env.IMAGE_TAG = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
-                    echo "Image tag: ${env.IMAGE_TAG}"
+                    env.IMAGE_TAG = "latest"
                 }
             }
         }
@@ -108,10 +107,8 @@ pipeline {
                     // Push images
                     sh """
                         docker push ${MOVIE_SERVICE_IMAGE}:${IMAGE_TAG}
-                        docker push ${MOVIE_SERVICE_IMAGE}:latest
                         
                         docker push ${CAST_SERVICE_IMAGE}:${IMAGE_TAG}
-                        docker push ${CAST_SERVICE_IMAGE}:latest
                     """
                 }
             }
@@ -176,7 +173,6 @@ pipeline {
 }
 
 def deployToEnvironment(environment, imageTag, nodePort) {
-    echo "Deploying to ${environment} environment with image tag: ${imageTag} and nodePort: ${nodePort}"
     sh '''
           rm -Rf .kube
           mkdir .kube
