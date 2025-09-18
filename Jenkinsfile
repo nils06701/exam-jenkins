@@ -26,12 +26,11 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    // Get the current branch name
                     env.BRANCH_NAME = env.GIT_BRANCH.replaceAll('origin/', '')
                     echo "Building on branch: ${env.BRANCH_NAME}"
                     
-                    // Set image tag based on branch and build number
-                    env.IMAGE_TAG = "latest"
+                    env.IMAGE_TAG = "${env.BRANCH_NAME}"
+                    echo "Image tag: ${env.IMAGE_TAG}"
                 }
             }
         }
