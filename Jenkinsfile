@@ -30,21 +30,16 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 script {
-                    echo "Building Docker images with docker-compose..."
+                    echo "Building Docker images..."
                     
-                    // Build images using docker-compose
-                    sh '''
-                        docker-compose build movie_service
-                        docker-compose build cast_service
-                    '''
-                    
-                    // Tag images for pushing to DockerHub
                     sh """
-                        docker tag exam-jenkins_movie_service:latest ${MOVIE_SERVICE_IMAGE}:${IMAGE_TAG}
-                        docker tag exam-jenkins_movie_service:latest ${MOVIE_SERVICE_IMAGE}:latest
-                        
-                        docker tag exam-jenkins_cast_service:latest ${CAST_SERVICE_IMAGE}:${IMAGE_TAG}
-                        docker tag exam-jenkins_cast_service:latest ${CAST_SERVICE_IMAGE}:latest
+                        docker build -t ${MOVIE_SERVICE_IMAGE}:${IMAGE_TAG} ./movie-service
+                        docker tag ${MOVIE_SERVICE_IMAGE}:${IMAGE_TAG} ${MOVIE_SERVICE_IMAGE}:latest
+                    """
+                    
+                    sh """
+                        docker build -t ${CAST_SERVICE_IMAGE}:${IMAGE_TAG} ./cast-service
+                        docker tag ${CAST_SERVICE_IMAGE}:${IMAGE_TAG} ${CAST_SERVICE_IMAGE}:latest
                     """
                 }
             }
@@ -137,7 +132,7 @@ pipeline {
         
         stage('Deploy to Production') {
             when {
-                branch 'prod'
+                branch 'prod' 
             }
             steps {
                 script {
@@ -157,7 +152,6 @@ pipeline {
 def deployToEnvironment(environment, imageTag) {
     echo "Deploying to ${environment} environment with image tag: ${imageTag}"
     
-    // Create namespace if it doesn't exist
     sh """
         kubectl create namespace ${environment} --dry-run=client -o yaml | kubectl apply -f -
     """
