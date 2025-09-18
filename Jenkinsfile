@@ -51,6 +51,14 @@ pipeline {
         }
         
         stage('Run Tests') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    branch 'staging'
+                    branch 'qa'
+                    branch 'prod'
+                }
+            }
             parallel {
                 stage('Test Movie Service') {
                     steps {
@@ -75,6 +83,14 @@ pipeline {
         }
         
         stage('Push to DockerHub') {
+            when {
+                anyOf {
+                    branch 'dev'
+                    branch 'staging'
+                    branch 'qa'
+                    branch 'prod'
+                }
+            }
             steps {
                 script {
                     echo "Pushing images to DockerHub..."
@@ -108,7 +124,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToEnvironment('dev', env.IMAGE_TAG)
+                    deployToEnvironment('dev', env.IMAGE_TAG, '30051')
                 }
             }
         }
@@ -119,7 +135,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToEnvironment('qa', env.IMAGE_TAG)
+                    deployToEnvironment('qa', env.IMAGE_TAG, '30052')
                 }
             }
         }
@@ -130,7 +146,7 @@ pipeline {
             }
             steps {
                 script {
-                    deployToEnvironment('staging', env.IMAGE_TAG)
+                    deployToEnvironment('staging', env.IMAGE_TAG, '30053')
                 }
             }
         }
@@ -147,15 +163,15 @@ pipeline {
                           submitterParameter: 'APPROVER'
                     
                     echo "Production deployment approved by: ${APPROVER}"
-                    deployToEnvironment('prod', env.IMAGE_TAG)
+                    deployToEnvironment('prod', env.IMAGE_TAG, '30054')
                 }
             }
         }
     }
 }
 
-def deployToEnvironment(environment, imageTag) {
-    echo "Deploying to ${environment} environment with image tag: ${imageTag}"
+def deployToEnvironment(environment, imageTag, nodePort) {
+    echo "Deploying to ${environment} environment with image tag: ${imageTag} and nodePort: ${nodePort}"
     sh '''
           rm -Rf .kube
           mkdir .kube
@@ -173,6 +189,7 @@ def deployToEnvironment(environment, imageTag) {
             --set movieService.image.tag=${imageTag} \\
             --set castService.image.tag=${imageTag} \\
             --set global.environment=${environment} \\
+            --set nginx.service.nodePort=${nodePort} \\
             --wait \\
             --timeout=10m
     """
